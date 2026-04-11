@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name        Internal Rate Helper C
+// @name        Shippingright
 // @namespace   Violentmonkey Scripts
 // @match       *://ondemand.shiprite.com/*
 // @updateURL   https://raw.githubusercontent.com/Cmphl/Quoteproto1/refs/heads/main/Shippingright.user.js
