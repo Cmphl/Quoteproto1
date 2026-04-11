@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name        Mothership Quote Injector (v6 - Direct Enter)
+// @name        Matronvessel Quote Injector (v6 - Direct Enter)
 // @namespace   Violentmonkey Scripts
 // @match       *://dashboard.mothership.com/*
 // @grant       none
