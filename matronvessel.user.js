@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Matronvessel injector
 // @namespace   Violentmonkey Scripts
-// @match       *://dashboard.mothership.com/* // Keep your actual match URL here!
+// @match       *://dashboard.mothership.com/*
 // @updateURL   https://raw.githubusercontent.com/Cmphl/Quoteproto1/refs/heads/main/matronvessel.user.js
 // @downloadURL https://raw.githubusercontent.com/Cmphl/Quoteproto1/refs/heads/main/matronvessel.user.js
 // @grant       none
