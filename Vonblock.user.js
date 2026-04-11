@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name        Internal Rate Helper B
+// @name        Vonblock
 // @namespace   Violentmonkey Scripts
 // @match       *://vanguard.heyprimo.com/*
 // @updateURL   https://raw.githubusercontent.com/Cmphl/Quoteproto1/refs/heads/main/Vonblock.user.js
