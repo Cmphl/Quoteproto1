@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name        ShipRite Quick Quote Injector (v6 - Manual Submit)
+// @name        Shippingright Quick Quote Injector (v6 - Manual Submit)
 // @namespace   Violentmonkey Scripts
 // @match       *://ondemand.shiprite.com/quick-quote/new*
 // @grant       none
