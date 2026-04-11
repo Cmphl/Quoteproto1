@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartQuote Logistics Dashboard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        h1 { margin-top: 0; color: #2c3e50; }
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+            background: #eef2f3;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .toggles label {
+            margin-right: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 14px;
+            resize: vertical;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 12px 24px;
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover { background-color: #004494; }
+        #testInjectionBtn { background-color: #6c757d; }
+        #testInjectionBtn:hover { background-color: #5a6268; }
+        
+        .output-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .box {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            min-height: 200px;
+        }
+        .box-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #555;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+        input[type="password"] {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>SmartQuote Control Center</h1>
+
+    <div class="controls">
+        <div>
+            <label for="apiKey"><strong>OpenAI Key:</strong></label>
+            <input type="password" id="apiKey" placeholder="sk-proj-..." size="30">
+            <button id="saveKeyBtn" style="padding: 4px 8px; font-size: 12px; margin-left: 5px; background-color: #28a745;">💾 Save</button>
+        </div>
+        <div class="toggles">
+            <strong>Launch Targets:</strong>
+            <label><input type="checkbox" id="toggleShiprite" checked> ShipRite</label>
+            <label><input type="checkbox" id="toggleVanguard" checked> Vanguard Primo</label>
+            <label><input type="checkbox" id="toggleMothership" checked> Mothership</label>
+        </div>
+    </div>
+
+    <textarea id="emailInput" placeholder="Paste the customer's email quote request here..."></textarea>
+
+    <div class="btn-group">
+        <button id="getQuoteBtn">🤖 Generate JSON & Launch</button>
+        <button id="testInjectionBtn">🧪 Test Injection (Bypass AI)</button>
+    </div>
+
+    <div class="output-grid">
+        <div>
+            <div class="box-title">System Logs & Math Engine</div>
+            <div id="mathBox" class="box">Awaiting input...</div>
+        </div>
+        <div>
+            <div class="box-title">Final Base64 Payload (JSON)</div>
+            <div id="jsonBox" class="box"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+	// Auto-load the key if it exists in the browser's memory
+    const savedKey = localStorage.getItem('smartQuoteApiKey');
+    if (savedKey) document.getElementById('apiKey').value = savedKey;
+
+    // Save the key when the button is clicked
+    document.getElementById('saveKeyBtn').addEventListener('click', function() {
+        const key = document.getElementById('apiKey').value.trim();
+        if (key) {
+            localStorage.setItem('smartQuoteApiKey', key);
+            alert("API Key saved to your browser! You won't need to paste it again.");
+        }
+    });
+
+    // GLOBAL MEMORY: Stores the last successfully parsed AI payload for testing
+    let lastGeneratedPayload = null;
+
+    const systemPrompt = `
+    You are an expert freight forwarding data extractor. Extract freight dimensions and routing from the provided email text.
+    Return ONLY a valid JSON object matching this exact structure:
+    {
+        "originZip": "string (5 digits)",
+        "destinationZip": "string (5 digits)",
+        "pallets": [
+            {
+                "quantity": number,
+                "length": number,
+                "width": number,
+                "height": number,
+                "weight": number,
+                "dimUnit": "string (in or cm)",
+                "weightUnit": "string (lbs or kg)",
+                "commodity": "string (or 'FAK' if blank)"
+            }
+        ]
+    }
+    CRITICAL RULES:
+    1. Do NOT do any math or unit conversions. Extract the numbers exactly as written in the email.
+    2. If a commodity is not listed, use "FAK".
+    `;
+
+    document.getElementById('getQuoteBtn').addEventListener('click', async function() {
+        const rawText = document.getElementById('emailInput').value.trim();
+        const apiKey = document.getElementById('apiKey').value.trim();
+        const mathBox = document.getElementById('mathBox');
+        const jsonBox = document.getElementById('jsonBox');
+
+        if (!rawText) return alert("Please paste an email first.");
+        if (!apiKey) return alert("Please enter your OpenAI API key.");
+
+        mathBox.innerHTML = "Calling OpenAI (gpt-4o-mini)...";
+        jsonBox.innerHTML = "";
+        lastGeneratedPayload = null; // Reset memory
+
+        try {
+            // --- 1. CALL OPENAI ---
+            const response = await fetch("https://api.openai.com/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    model: "gpt-4o-mini",
+                    response_format: { type: "json_object" },
+                    messages: [
+                        { role: "system", content: systemPrompt },
+                        { role: "user", content: rawText }
+                    ]
+                })
+            });
+
+            if (!response.ok) throw new Error("API Request Failed. Check your API Key.");
+            
+            const data = await response.json();
+            let freightData = JSON.parse(data.choices[0].message.content);
+
+            mathBox.innerHTML = "Data extracted. Running normalization engine...<br>";
+
+            // --- 2. LOCAL MATH & CONVERSION ENGINE ---
+            let calculatedTotalWeight = 0;
+            let totalLengthInches = 0;
+
+            if (freightData.pallets && freightData.pallets.length > 0) {
+                freightData.pallets.forEach((p, index) => {
+                    let logStr = `<br>Pallet ${index + 1}: `;
+                    
+                    // Convert Metric to Imperial
+                    if (p.dimUnit && p.dimUnit.toLowerCase().includes('cm')) {
+                        p.length = Math.round(p.length / 2.54);
+                        p.width = Math.round(p.width / 2.54);
+                        p.height = Math.round(p.height / 2.54);
+                        p.dimUnit = 'in';
+                        logStr += "Converted dims to inches. ";
+                    }
+                    if (p.weightUnit && p.weightUnit.toLowerCase().includes('kg')) {
+                        p.weight = Math.round(p.weight * 2.20462);
+                        p.weightUnit = 'lbs';
+                        logStr += "Converted weight to lbs. ";
+                    }
+
+                    // Total Weight Math
+                    let qty = p.quantity || 1;
+                    calculatedTotalWeight += (p.weight * qty);
+                    
+                    // Linear Feet Math (Side-by-side logic for standard pallets)
+                    if (p.width <= 48) {
+                        totalLengthInches += (p.length * qty) / 2; 
+                    } else {
+                        totalLengthInches += (p.length * qty);
+                    }
+
+                    mathBox.innerHTML += logStr;
+                });
+            }
+
+            // Append calculated totals to the JSON object
+            freightData.totalWeight = calculatedTotalWeight;
+            freightData.linearFeet = Math.ceil(totalLengthInches / 12);
+            
+            mathBox.innerHTML += `<br><br><strong>Totals:</strong><br>Weight: ${freightData.totalWeight} lbs<br>Linear Feet: ${freightData.linearFeet}`;
+
+            // --- 3. SAVE TO MEMORY & DISPLAY ---
+            lastGeneratedPayload = freightData; // Trap it for the test button!
+            jsonBox.innerText = JSON.stringify(freightData, null, 4);
+
+            // --- 4. DISPATCH URLs ---
+            dispatchUrls(freightData);
+
+        } catch (error) {
+            console.error(error);
+            mathBox.innerHTML = `<span style="color:red;">Error: ${error.message}</span>`;
+        }
+    });
+
+    // ==========================================
+    // RE-RUN INJECTION: Fire the last generated payload
+    // ==========================================
+    document.getElementById('testInjectionBtn').addEventListener('click', function() {
+        if (!lastGeneratedPayload) {
+            alert("No payload in memory! Please paste an email and hit 'Generate JSON & Launch' to parse one first.");
+            return;
+        }
+
+        document.getElementById('mathBox').innerHTML += `<br><br><span style="color: blue;">[TEST INJECTION TRIGGERED]</span>`;
+        dispatchUrls(lastGeneratedPayload);
+    });
+
+    // Helper function to encode and open tabs
+    function dispatchUrls(payloadObj) {
+        const payloadStr = encodeURIComponent(btoa(JSON.stringify(payloadObj)));
+
+        if (document.getElementById('toggleShiprite').checked) {
+            window.open(`https://ondemand.shiprite.com/quick-quote/new?payload=${payloadStr}`, "_blank");
+        }
+        
+        if (document.getElementById('toggleVanguard').checked) {
+            window.open(`https://vanguard.heyprimo.com/quote?payload=${payloadStr}`, "_blank");
+        }
+
+        if (document.getElementById('toggleMothership').checked) {
+            window.open(`https://dashboard.mothership.com/ship?payload=${payloadStr}`, "_blank");
+        }
+    }
+</script>
+
+</body>
+</html>
