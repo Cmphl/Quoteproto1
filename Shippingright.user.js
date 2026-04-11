@@ -1,7 +1,9 @@
 // ==UserScript==
-// @name        Shippingright Quick Quote Injector (v6 - Manual Submit)
+// @name        Internal Rate Helper C
 // @namespace   Violentmonkey Scripts
-// @match       *://ondemand.shiprite.com/quick-quote/new*
+// @match       *://ondemand.shiprite.com/*
+// @updateURL   https://raw.githubusercontent.com/Cmphl/Quoteproto1/refs/heads/main/Shippingright.user.js
+// @downloadURL https://raw.githubusercontent.com/Cmphl/Quoteproto1/refs/heads/main/Shippingright.user.js
 // @grant       none
 // ==/UserScript==
 
