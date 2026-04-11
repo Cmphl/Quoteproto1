@@ -1,7 +1,9 @@
 // ==UserScript==
-// @name        Vonblock Primo Quote Injector (v11 - Resilient Loop)
+// @name        Internal Rate Helper B
 // @namespace   Violentmonkey Scripts
-// @match       *://vanguard.heyprimo.com/quote*
+// @match       *://vanguard.heyprimo.com/* // Keep your actual match URL here!
+// @updateURL   https://raw.githubusercontent.com/Cmphl/Quoteproto1/refs/heads/main/Vonblock.user.js
+// @downloadURL https://raw.githubusercontent.com/Cmphl/Quoteproto1/refs/heads/main/Vonblock.user.js
 // @grant       none
 // ==/UserScript==
 
