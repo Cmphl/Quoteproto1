@@ -169,13 +169,14 @@
                     const weights = document.querySelectorAll('[data-testid="cargo-weight-input"]');
 
                     console.log(`Injecting Pallet ${i + 1}...`);
-                    const totalLineWeight = p.weight * (p.quantity || 1);
+                    
+                    // Removed totalLineWeight multiplier. Mothership expects per-pallet weight.
 
                     if (qtys[0]) { setReactValue(qtys[0], String(p.quantity || 1)); await sleep(100); }
                     if (lengths[0]) { setReactValue(lengths[0], String(p.length)); await sleep(100); }
                     if (widths[0]) { setReactValue(widths[0], String(p.width)); await sleep(100); }
                     if (heights[0]) { setReactValue(heights[0], String(p.height)); await sleep(100); }
-                    if (weights[0]) { setReactValue(weights[0], String(totalLineWeight)); }
+                    if (weights[0]) { setReactValue(weights[0], String(p.weight)); } // Directly injecting p.weight
                     
                     await sleep(1000); 
 
