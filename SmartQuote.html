@@ -13,7 +13,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 900px;
+            max-width: 1400px;
             margin: 0 auto;
             background: white;
             padding: 30px;
@@ -27,18 +27,10 @@
             margin-bottom: 20px;
             flex-wrap: wrap;
             align-items: center;
-            background: #eef2f3;
-            padding: 15px;
-            border-radius: 8px;
-        }
-        .toggles label {
-            margin-right: 15px;
-            font-weight: bold;
-            cursor: pointer;
         }
         textarea {
             width: 100%;
-            height: 150px;
+            height: 120px;
             padding: 15px;
             border: 1px solid #ccc;
             border-radius: 8px;
@@ -47,14 +39,32 @@
             box-sizing: border-box;
             margin-bottom: 15px;
         }
+        /* Unified Launch Console */
+        .launch-console {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #eef2f3;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+            border: 1px solid #dce4e6;
+        }
+        .launch-console .toggles {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            font-weight: bold;
+        }
         .btn-group {
             display: flex;
             gap: 10px;
-            margin-bottom: 20px;
         }
         button {
             padding: 12px 24px;
-            background-color: #0056b3;
             color: white;
             border: none;
             border-radius: 6px;
@@ -63,13 +73,15 @@
             cursor: pointer;
             transition: background 0.2s;
         }
-        button:hover { background-color: #004494; }
-        #testInjectionBtn { background-color: #6c757d; }
-        #testInjectionBtn:hover { background-color: #5a6268; }
+        #parseBtn { background-color: #17a2b8; }
+        #parseBtn:hover { background-color: #138496; }
+        #launchBtn { background-color: #28a745; }
+        #launchBtn:hover { background-color: #218838; }
         
+        /* 3-Column Grid */
         .output-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1.5fr 1fr;
             gap: 20px;
         }
         .box {
@@ -80,7 +92,7 @@
             font-family: monospace;
             white-space: pre-wrap;
             overflow-x: auto;
-            min-height: 200px;
+            min-height: 400px;
         }
         .box-title {
             font-weight: bold;
@@ -88,12 +100,30 @@
             color: #555;
             text-transform: uppercase;
             font-size: 12px;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 5px;
         }
-        input[type="password"] {
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
+        
+        /* Summary UI Styling */
+        .summary-section { margin-bottom: 15px; font-family: 'Segoe UI', sans-serif; }
+        .summary-label { font-weight: bold; font-size: 13px; color: #666; display: block; margin-bottom: 2px; }
+        .summary-input { padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; width: 100px; }
+        .summary-input.wide { width: 250px; }
+        .summary-input.short { width: 60px; }
+        
+        .pallet-row { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; background: #fff; padding: 8px; border: 1px solid #eee; border-radius: 4px; }
+        
+        /* Validation Styling */
+        .val-list { list-style-type: none; padding-left: 0; margin-top: 5px; font-family: 'Segoe UI', sans-serif; font-size: 14px; }
+        .val-list li { margin-bottom: 4px; padding: 4px 8px; border-radius: 4px; }
+        .val-stop { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .val-warn { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+        .val-good { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        
+        /* Confidence Badges */
+        .conf-badge { font-size: 10px; padding: 2px 4px; border-radius: 3px; margin-left: 5px; font-weight: bold; }
+        .conf-high { background: #d4edda; color: #155724; }
+        .conf-low { background: #fff3cd; color: #856404; }
     </style>
 </head>
 <body>
@@ -102,102 +132,128 @@
     <h1>SmartQuote Control Center</h1>
 
     <div class="controls">
-        <div>
-            <label for="apiKey"><strong>OpenAI Key:</strong></label>
-            <input type="password" id="apiKey" placeholder="sk-proj-..." size="30">
-            <button id="saveKeyBtn" style="padding: 4px 8px; font-size: 12px; margin-left: 5px; background-color: #28a745;">💾 Save</button>
-        </div>
-        <div class="toggles">
-            <strong>Launch Targets:</strong>
-            <label><input type="checkbox" id="toggleShiprite" checked> ShipRite</label>
-            <label><input type="checkbox" id="toggleVanguard" checked> Vanguard Primo</label>
-            <label><input type="checkbox" id="toggleMothership" checked> Mothership</label>
-        </div>
+        <label for="apiKey"><strong>OpenAI Key:</strong></label>
+        <input type="password" id="apiKey" placeholder="sk-proj-..." size="30" style="padding:5px; border-radius:4px; border:1px solid #ccc;">
+        <button id="saveKeyBtn" style="padding: 6px 12px; font-size: 12px; background-color: #6c757d;">💾 Save Key</button>
     </div>
 
     <textarea id="emailInput" placeholder="Paste the customer's email quote request here..."></textarea>
 
-    <div class="btn-group">
-        <button id="getQuoteBtn">🤖 Generate JSON & Launch</button>
-        <button id="testInjectionBtn">🧪 Test Injection (Bypass AI)</button>
+    <div class="launch-console">
+        <div class="toggles" id="carrierToggles">
+            <strong>Launch Targets:</strong>
+            </div>
+        
+        <div class="btn-group">
+            <button id="parseBtn">🤖 1. Parse Data</button>
+            <button id="launchBtn">🚀 2. Launch Quotes</button>
+        </div>
     </div>
 
     <div class="output-grid">
         <div>
-            <div class="box-title">System Logs & Math Engine</div>
-            <div id="mathBox" class="box">Awaiting input...</div>
+            <div class="box-title">System Logs</div>
+            <div id="mathBox" class="box" style="font-size: 12px;">Awaiting input...</div>
         </div>
+        
         <div>
-            <div class="box-title">Final Base64 Payload (JSON)</div>
-            <div id="jsonBox" class="box"></div>
+            <div class="box-title">Parsed Shipment Summary (Editable)</div>
+            <div id="summaryBox" class="box" style="background: #fdfdfd; white-space: normal;">
+                <em style="color:#999; font-family: 'Segoe UI';">No data parsed yet. Click 'Parse Data' to begin.</em>
+            </div>
+        </div>
+
+        <div>
+            <div class="box-title">Final Payload (JSON)</div>
+            <div id="jsonBox" class="box" style="font-size: 12px; color: #0056b3;"></div>
         </div>
     </div>
 </div>
 
 <script>
-	// Auto-load the key if it exists in the browser's memory
+    // ==========================================
+    // CARRIER CONFIGURATION (Single Source of Truth)
+    // ==========================================
+    const carriers = [
+        { id: "toggleShiprite", name: "ShipRite", url: "https://ondemand.shiprite.com/quick-quote/new?payload=", checked: true },
+        { id: "toggleVanguard", name: "Vanguard", url: "https://vanguard.heyprimo.com/quote?payload=", checked: true },
+        { id: "toggleMothership", name: "Mothership", url: "https://dashboard.mothership.com/ship?payload=", checked: true },
+        { id: "toggleExflip", name: "ExFreight", url: "https://exfreight.flipstone.com/ratings?payload=", checked: true }
+    ];
+
+    const toggleContainer = document.getElementById('carrierToggles');
+    carriers.forEach(carrier => {
+        const label = document.createElement('label');
+        label.innerHTML = `<input type="checkbox" id="${carrier.id}" ${carrier.checked ? 'checked' : ''}> ${carrier.name}`;
+        toggleContainer.appendChild(label);
+    });
+
+    // Keys & Globals
     const savedKey = localStorage.getItem('smartQuoteApiKey');
     if (savedKey) document.getElementById('apiKey').value = savedKey;
 
-    // Save the key when the button is clicked
     document.getElementById('saveKeyBtn').addEventListener('click', function() {
         const key = document.getElementById('apiKey').value.trim();
         if (key) {
             localStorage.setItem('smartQuoteApiKey', key);
-            alert("API Key saved to your browser! You won't need to paste it again.");
+            alert("API Key saved!");
         }
     });
 
-    // GLOBAL MEMORY: Stores the last successfully parsed AI payload for testing
-    let lastGeneratedPayload = null;
+    let currentFreightData = null; // Master state object
+    let validationState = { isValid: false, stops: [], warnings: [], goods: [] };
 
+    // ==========================================
+    // AI SYSTEM PROMPT
+    // ==========================================
     const systemPrompt = `
-    You are an expert freight forwarding data extractor. Extract freight dimensions and routing from the provided email text.
-    Return ONLY a valid JSON object matching this exact structure:
+    You are an expert freight forwarding data extractor. 
+    Extract data from email text. 
+    Return ONLY a valid JSON object matching this schema:
     {
-        "originZip": "string (5 digits)",
-        "destinationZip": "string (5 digits)",
+        "originZip": "string (5 digits, or '')",
+        "destinationZip": "string (5 digits, or '')",
+        "commodity": "string (or 'FAK')",
         "pallets": [
             {
                 "quantity": number,
-                "length": number,
-                "width": number,
-                "height": number,
-                "weight": number,
-                "dimUnit": "string (in or cm)",
-                "weightUnit": "string (lbs or kg)",
-                "commodity": "string (or 'FAK' if blank)"
+                "length": number (or null),
+                "width": number (or null),
+                "height": number (or null),
+                "weight": number (MUST be PER-PALLET weight),
+                "cbm": number (MUST be PER-PALLET cbm, default 0),
+                "dimUnit": "string (in, cm, mm, m, or null)",
+                "weightUnit": "string (lbs or kg)"
             }
         ]
     }
     CRITICAL RULES:
-    1. Do NOT do any math or unit conversions. Extract the numbers exactly as written in the email.
-    2. If a commodity is not listed, use "FAK".
+    1. MISSING DIMS: Do NOT guess dimensions. If missing, output null.
+    2. PER-PALLET MATH: The "weight" and "cbm" fields MUST represent ONE pallet. If a total is given (e.g., "Total: 2PLTS / 1016kgs"), divide by the quantity.
+    3. If a ZIP is missing, output an empty string "".
     `;
 
-    document.getElementById('getQuoteBtn').addEventListener('click', async function() {
+    // ==========================================
+    // 1. PARSE BUTTON LOGIC
+    // ==========================================
+    document.getElementById('parseBtn').addEventListener('click', async function() {
         const rawText = document.getElementById('emailInput').value.trim();
         const apiKey = document.getElementById('apiKey').value.trim();
         const mathBox = document.getElementById('mathBox');
-        const jsonBox = document.getElementById('jsonBox');
 
         if (!rawText) return alert("Please paste an email first.");
         if (!apiKey) return alert("Please enter your OpenAI API key.");
 
-        mathBox.innerHTML = "Calling OpenAI (gpt-4o-mini)...";
-        jsonBox.innerHTML = "";
-        lastGeneratedPayload = null; // Reset memory
+        mathBox.innerHTML = "Calling OpenAI (gpt-4o)...<br>";
+        document.getElementById('summaryBox').innerHTML = "<em>Parsing...</em>";
+        currentFreightData = null;
 
         try {
-            // --- 1. CALL OPENAI ---
             const response = await fetch("https://api.openai.com/v1/chat/completions", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${apiKey}`
-                },
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
                 body: JSON.stringify({
-                    model: "gpt-4o-mini",
+                    model: "gpt-4o",
                     response_format: { type: "json_object" },
                     messages: [
                         { role: "system", content: systemPrompt },
@@ -206,98 +262,299 @@
                 })
             });
 
-            if (!response.ok) throw new Error("API Request Failed. Check your API Key.");
-            
+            if (!response.ok) throw new Error("API Request Failed.");
             const data = await response.json();
-            let freightData = JSON.parse(data.choices[0].message.content);
-
-            mathBox.innerHTML = "Data extracted. Running normalization engine...<br>";
-
-            // --- 2. LOCAL MATH & CONVERSION ENGINE ---
-            let calculatedTotalWeight = 0;
-            let totalLengthInches = 0;
-
-            if (freightData.pallets && freightData.pallets.length > 0) {
-                freightData.pallets.forEach((p, index) => {
-                    let logStr = `<br>Pallet ${index + 1}: `;
-                    
-                    // Convert Metric to Imperial
-                    if (p.dimUnit && p.dimUnit.toLowerCase().includes('cm')) {
-                        p.length = Math.round(p.length / 2.54);
-                        p.width = Math.round(p.width / 2.54);
-                        p.height = Math.round(p.height / 2.54);
-                        p.dimUnit = 'in';
-                        logStr += "Converted dims to inches. ";
-                    }
-                    if (p.weightUnit && p.weightUnit.toLowerCase().includes('kg')) {
-                        p.weight = Math.round(p.weight * 2.20462);
-                        p.weightUnit = 'lbs';
-                        logStr += "Converted weight to lbs. ";
-                    }
-
-                    // Total Weight Math
-                    let qty = p.quantity || 1;
-                    calculatedTotalWeight += (p.weight * qty);
-                    
-                    // Linear Feet Math (Side-by-side logic for standard pallets)
-                    if (p.width <= 48) {
-                        totalLengthInches += (p.length * qty) / 2; 
-                    } else {
-                        totalLengthInches += (p.length * qty);
-                    }
-
-                    mathBox.innerHTML += logStr;
-                });
-            }
-
-            // Append calculated totals to the JSON object
-            freightData.totalWeight = calculatedTotalWeight;
-            freightData.linearFeet = Math.ceil(totalLengthInches / 12);
             
-            mathBox.innerHTML += `<br><br><strong>Totals:</strong><br>Weight: ${freightData.totalWeight} lbs<br>Linear Feet: ${freightData.linearFeet}`;
-
-            // --- 3. SAVE TO MEMORY & DISPLAY ---
-            lastGeneratedPayload = freightData; // Trap it for the test button!
-            jsonBox.innerText = JSON.stringify(freightData, null, 4);
-
-            // --- 4. DISPATCH URLs ---
-            dispatchUrls(freightData);
+            // Load raw data into global state
+            currentFreightData = JSON.parse(data.choices[0].message.content);
+            
+            // Run Math Engine and Render UI
+            processMathAndRender();
 
         } catch (error) {
             console.error(error);
-            mathBox.innerHTML = `<span style="color:red;">Error: ${error.message}</span>`;
+            mathBox.innerHTML += `<span style="color:red;">Error: ${error.message}</span>`;
+            document.getElementById('summaryBox').innerHTML = `<span style="color:red;">Failed to parse. Check API key.</span>`;
         }
     });
 
     // ==========================================
-    // RE-RUN INJECTION: Fire the last generated payload
+    // 2. MATH & VALIDATION ENGINE
     // ==========================================
-    document.getElementById('testInjectionBtn').addEventListener('click', function() {
-        if (!lastGeneratedPayload) {
-            alert("No payload in memory! Please paste an email and hit 'Generate JSON & Launch' to parse one first.");
+    function processMathAndRender() {
+        if (!currentFreightData) return;
+        const mathBox = document.getElementById('mathBox');
+        mathBox.innerHTML = "<strong>Math Engine Logs:</strong><br>";
+        
+        let totalWeight = 0;
+        let totalLengthInches = 0;
+        let totalCBM = 0;
+
+        // Iterate through pallets to normalize and calculate
+        if (currentFreightData.pallets && Array.isArray(currentFreightData.pallets)) {
+            currentFreightData.pallets.forEach((p, index) => {
+                let logStr = `Pallet ${index + 1}: `;
+                let qty = Number(p.quantity) || 1;
+                p.estimatedDims = false; // Reset confidence flag
+
+                // --- CBM HEIGHT FALLBACK LOGIC ---
+                if (!p.length || !p.width || !p.height) {
+                    p.length = 48;
+                    p.width = 40;
+                    p.estimatedDims = true; // Flag for warning UI
+                    
+                    if (p.cbm && p.cbm > 0) {
+                        p.height = Math.ceil((p.cbm * 61023.74) / (48 * 40));
+                        logStr += `Missing Dims. Calced Height (${p.height} in) from CBM. `;
+                    } else {
+                        p.height = 48; 
+                        logStr += `Missing Dims & CBM. Defaulted 48x40x48. `;
+                    }
+                    p.dimUnit = 'in'; 
+                }
+
+                // Convert Metric to Imperial (Rounding Up)
+                if (p.dimUnit) {
+                    let unit = p.dimUnit.toLowerCase();
+                    if (unit === 'm' || unit === 'meters') {
+                        p.length = Math.ceil(p.length * 39.37); p.width = Math.ceil(p.width * 39.37); p.height = Math.ceil(p.height * 39.37);
+                        p.dimUnit = 'in'; logStr += "Metric to in. ";
+                    } else if (unit.includes('cm')) {
+                        p.length = Math.ceil(p.length / 2.54); p.width = Math.ceil(p.width / 2.54); p.height = Math.ceil(p.height / 2.54);
+                        p.dimUnit = 'in'; logStr += "Metric to in. ";
+                    }
+                }
+
+                if (p.weightUnit && p.weightUnit.toLowerCase().includes('kg')) {
+                    p.weight = Math.ceil(p.weight * 2.20462);
+                    p.weightUnit = 'lbs'; logStr += "Metric to lbs. ";
+                }
+
+                // Accumulate Totals
+                totalWeight += (p.weight * qty);
+                
+                // Volume Math: L*W*H / 1728 = CFT. CFT / 35.3147 = CBM.
+                let palletCFT = (p.length * p.width * p.height) / 1728;
+                totalCBM += (palletCFT / 35.3147) * qty;
+
+                // Linear Feet Math
+                if (p.width <= 48) {
+                    totalLengthInches += (p.length * qty) / 2; 
+                } else {
+                    totalLengthInches += (p.length * qty);
+                }
+
+                mathBox.innerHTML += logStr + "<br>";
+            });
+        }
+
+        // Attach calculated totals
+        currentFreightData.totalWeight = totalWeight;
+        currentFreightData.linearFeet = Math.ceil(totalLengthInches / 12);
+        currentFreightData.totalCBM = totalCBM.toFixed(2);
+        currentFreightData.totalCFT = (totalCBM * 35.3147).toFixed(2);
+
+        // Run Rules Engine
+        runValidation(currentFreightData);
+
+        // Update JSON Box
+        document.getElementById('jsonBox').innerText = JSON.stringify(currentFreightData, null, 4);
+
+        // Re-render UI
+        renderSummaryBox();
+    }
+
+    // ==========================================
+    // 3. RULES & VALIDATION ENGINE
+    // ==========================================
+    function runValidation(data) {
+        validationState = { isValid: true, stops: [], warnings: [], goods: [] };
+
+        // 1. Check Origin
+        if (!data.originZip || data.originZip.trim() === "" || data.originZip === "UNKNOWN") {
+            validationState.stops.push("Missing Origin ZIP");
+            validationState.isValid = false;
+        } else { validationState.goods.push("Origin ZIP found"); }
+
+        // 2. Check Dest
+        if (!data.destinationZip || data.destinationZip.trim() === "" || data.destinationZip === "UNKNOWN") {
+            validationState.stops.push("Missing Destination ZIP");
+            validationState.isValid = false;
+        } else { validationState.goods.push("Destination ZIP found"); }
+
+        // 3. Check Commodity
+        if (!data.commodity || data.commodity.includes("FAK") || data.commodity.includes("General Cargo")) {
+            validationState.warnings.push("Commodity missing or generic (FAK)");
+        } else { validationState.goods.push("Commodity found"); }
+
+        // 4. Pallet Checks
+        if (!data.pallets || data.pallets.length === 0) {
+            validationState.stops.push("No pallets found");
+            validationState.isValid = false;
+        } else {
+            let hasEstimatedDims = false;
+            let missingWeight = false;
+
+            data.pallets.forEach(p => {
+                if (p.estimatedDims) hasEstimatedDims = true;
+                if (!p.weight || p.weight === 0) missingWeight = true;
+                if (p.height > 96) validationState.warnings.push(`Pallet height unusually high (${p.height} in)`);
+                if (p.weight > 2500) validationState.warnings.push(`Pallet weight unusually high (${p.weight} lbs)`);
+            });
+
+            if (hasEstimatedDims) validationState.warnings.push("Dimensions were estimated from CBM/Default");
+            if (missingWeight) { validationState.stops.push("Missing weight on one or more pallets"); validationState.isValid = false; }
+            else { validationState.goods.push("Weight mapped successfully"); }
+        }
+    }
+
+        // ==========================================
+    // 4. RENDER EDITABLE DOM
+    // ==========================================
+    function renderSummaryBox() {
+        if (!currentFreightData) return;
+        const box = document.getElementById('summaryBox');
+        const d = currentFreightData;
+
+        // Dynamic Badge Logic
+        const originMissing = !d.originZip || d.originZip.trim() === "" || d.originZip === "UNKNOWN";
+        const destMissing = !d.destinationZip || d.destinationZip.trim() === "" || d.destinationZip === "UNKNOWN";
+        const commMissing = !d.commodity || d.commodity.includes("FAK") || d.commodity.includes("General Cargo");
+
+        const getRoutingBadge = (isMissing) => isMissing 
+            ? `<span class="conf-badge conf-low" style="background:#f8d7da; color:#721c24;">❌ Missing</span>` 
+            : `<span class="conf-badge conf-high">✓ Extracted</span>`;
+
+        let html = `
+            <div class="summary-section">
+                <span class="summary-label">Routing</span>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                    <span style="width: 40px;">From:</span> 
+                    <input type="text" class="summary-input" value="${d.originZip || ''}" onchange="updateGlobalState('originZip', this.value)"> 
+                    ${getRoutingBadge(originMissing)}
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="width: 40px;">To:</span> 
+                    <input type="text" class="summary-input" value="${d.destinationZip || ''}" onchange="updateGlobalState('destinationZip', this.value)">
+                    ${getRoutingBadge(destMissing)}
+                </div>
+            </div>
+
+            <div class="summary-section">
+                <span class="summary-label">Commodity</span>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <input type="text" class="summary-input wide" value="${d.commodity || ''}" onchange="updateGlobalState('commodity', this.value)">
+                    ${commMissing ? `<span class="conf-badge conf-low">⚠ Defaulted</span>` : `<span class="conf-badge conf-high">✓ Extracted</span>`}
+                </div>
+            </div>
+
+            <div class="summary-section">
+                <span class="summary-label">Pallet Details (Editable)</span>
+        `;
+
+        d.pallets.forEach((p, idx) => {
+            const confBadge = p.estimatedDims 
+                ? `<span class="conf-badge conf-low">⚠ Estimated</span>` 
+                : `<span class="conf-badge conf-high">✓ Extracted</span>`;
+            
+            html += `
+                <div class="pallet-row" style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center; margin-bottom: 8px; background: #fff; padding: 10px; border: 1px solid #eee; border-radius: 4px;">
+                    
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                        <span style="font-weight: 500;">Qty:</span> 
+                        <input type="number" class="summary-input short" value="${p.quantity}" onchange="updatePalletState(${idx}, 'quantity', this.value)">
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                        <span style="font-weight: 500;">L:</span> 
+                        <input type="number" class="summary-input short" value="${p.length || ''}" onchange="updatePalletState(${idx}, 'length', this.value)">
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                        <span style="font-weight: 500;">W:</span> 
+                        <input type="number" class="summary-input short" value="${p.width || ''}" onchange="updatePalletState(${idx}, 'width', this.value)">
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                        <span style="font-weight: 500;">H:</span> 
+                        <input type="number" class="summary-input short" value="${p.height || ''}" onchange="updatePalletState(${idx}, 'height', this.value)">
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                        <span style="font-weight: 500;">Wt (lbs):</span> 
+                        <input type="number" class="summary-input short" value="${p.weight || ''}" onchange="updatePalletState(${idx}, 'weight', this.value)">
+                    </div>
+                    
+                    <div style="margin-left: auto;">
+                        ${confBadge}
+                    </div>
+
+                </div>
+            `;
+        });
+
+        html += `
+            </div>
+            <div class="summary-section" style="background:#eee; padding:10px; border-radius:4px; margin-bottom: 15px;">
+                <strong>Totals:</strong><br>
+                Weight: ${d.totalWeight} lbs<br>
+                Volume: ${d.totalCBM} CBM / ${d.totalCFT} CFT<br>
+                Linear Feet: ${d.linearFeet} ft
+            </div>
+            
+            <div class="summary-section">
+                <span class="summary-label">System Validation</span>
+                <ul class="val-list">
+        `;
+
+        // Render Validation Badges
+        validationState.stops.forEach(s => html += `<li class="val-stop">❌ HARD STOP: ${s}</li>`);
+        validationState.warnings.forEach(w => html += `<li class="val-warn">⚠ WARNING: ${w}</li>`);
+        validationState.goods.forEach(g => html += `<li class="val-good">✓ OK: ${g}</li>`);
+
+        html += `</ul></div>`;
+        box.innerHTML = html;
+    }
+
+    // --- State Updaters for the DOM Form ---
+    window.updateGlobalState = function(field, value) {
+        currentFreightData[field] = value;
+        processMathAndRender(); // Re-run everything!
+    };
+
+    window.updatePalletState = function(index, field, value) {
+        currentFreightData.pallets[index][field] = Number(value);
+        currentFreightData.pallets[index].estimatedDims = false; // If a human edits it, it is no longer estimated
+        processMathAndRender(); // Re-run everything!
+    };
+
+    // ==========================================
+    // 5. LAUNCH BUTTON LOGIC
+    // ==========================================
+    document.getElementById('launchBtn').addEventListener('click', function() {
+        if (!currentFreightData) {
+            alert("No data parsed! Please paste an email and hit 'Parse Data' first.");
             return;
         }
 
-        document.getElementById('mathBox').innerHTML += `<br><br><span style="color: blue;">[TEST INJECTION TRIGGERED]</span>`;
-        dispatchUrls(lastGeneratedPayload);
+        if (!validationState.isValid) {
+            alert("LAUNCH ABORTED!\n\nThere are Hard Stops in your validation list (e.g., missing ZIP code or 0 weight). Please fix them in the Editable Summary box before launching.");
+            return;
+        }
+
+        const payloadStr = encodeURIComponent(btoa(JSON.stringify(currentFreightData)));
+        let launchedAtLeastOne = false;
+
+        carriers.forEach(carrier => {
+            const checkbox = document.getElementById(carrier.id);
+            if (checkbox && checkbox.checked) {
+                window.open(carrier.url + payloadStr, "_blank");
+                launchedAtLeastOne = true;
+            }
+        });
+
+        if (!launchedAtLeastOne) alert("You have no Launch Targets selected!");
     });
-
-    // Helper function to encode and open tabs
-    function dispatchUrls(payloadObj) {
-        const payloadStr = encodeURIComponent(btoa(JSON.stringify(payloadObj)));
-
-        if (document.getElementById('toggleShiprite').checked) {
-            window.open(`https://ondemand.shiprite.com/quick-quote/new?payload=${payloadStr}`, "_blank");
-        }
-        
-        if (document.getElementById('toggleVanguard').checked) {
-            window.open(`https://vanguard.heyprimo.com/quote?payload=${payloadStr}`, "_blank");
-        }
-
-        if (document.getElementById('toggleMothership').checked) {
-            window.open(`https://dashboard.mothership.com/ship?payload=${payloadStr}`, "_blank");
-        }
-    }
 </script>
 
 </body>
