@@ -4,6 +4,8 @@
 // @namespace   Violentmonkey Scripts
 // @match       *://exfreight.flipstone.com/*
 // @grant       none
+// @updateURL   https://raw.githubusercontent.com/Cmphl/Quoteproto1/refs/heads/main/Exflip
+// @downloadURL https://raw.githubusercontent.com/Cmphl/Quoteproto1/refs/heads/main/Exflip
 // ==/UserScript==
 
 (function() {
