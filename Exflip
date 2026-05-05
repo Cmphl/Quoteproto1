@@ -1,0 +1,125 @@
+// ==UserScript==
+// @name        Internal Rate Helper E
+// @version     1.1
+// @namespace   Violentmonkey Scripts
+// @match       *://exfreight.flipstone.com/*
+// @grant       none
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    // 1. Get the Payload from the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const payloadEncoded = urlParams.get('payload');
+    if (!payloadEncoded) return;
+
+    const freightData = JSON.parse(atob(decodeURIComponent(payloadEncoded)));
+
+    // 2. React Value Setter
+    function setReactValue(element, value) {
+        if (!element) return;
+        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+        nativeInputValueSetter.call(element, value);
+        element.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+
+    // 3. Dynamic Date Generator (Today + 1)
+    function getTomorrowString() {
+        const tmrw = new Date();
+        tmrw.setDate(tmrw.getDate() + 1);
+        return tmrw.toISOString().split('T')[0]; // Returns "YYYY-MM-DD"
+    }
+
+    // 4. Typeahead Simulator for Routing
+    async function injectZip(inputId, zipCode) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+
+        setReactValue(input, zipCode);
+        await new Promise(r => setTimeout(r, 800)); // Wait for their DB
+
+        input.dispatchEvent(new KeyboardEvent('keydown', {
+            key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true, cancelable: true
+        }));
+    }
+
+    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+    // ==========================================
+    // MAIN INJECTION SEQUENCE
+    // ==========================================
+    window.addEventListener('load', async () => {
+        console.log("ExFreight Injector Booting...");
+        await sleep(2000); // Wait for the React DOM to settle
+
+        // --- 1. ROUTING ---
+        if (freightData.originZip && freightData.originZip !== "UNKNOWN") {
+            await injectZip('pickup0', freightData.originZip);
+            await sleep(500);
+        }
+        if (freightData.destinationZip && freightData.destinationZip !== "UNKNOWN") {
+            await injectZip('delivery0', freightData.destinationZip);
+            await sleep(500);
+        }
+
+        // --- 2. DATE INJECTION ---
+        const dateInput = document.querySelector('input[placeholder*="Ship Day"]');
+        if (dateInput) {
+            setReactValue(dateInput, getTomorrowString());
+            await sleep(300);
+        }
+
+        // --- 3. ADD NECESSARY ROWS ---
+        if (freightData.pallets && freightData.pallets.length > 1) {
+            // Find the "Add Item" button by looking at its text
+            const addBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Add Item'));
+            if (addBtn) {
+                // If we have 3 pallets, we need to click it 2 times (since row 1 already exists)
+                for (let i = 1; i < freightData.pallets.length; i++) {
+                    addBtn.click();
+                    await sleep(400); // Let React draw the new row
+                }
+            }
+        }
+
+        // --- 4. INJECT FREIGHT DATA ---
+        // Grab all the generic inputs, but exclude the ZIP code boxes
+        const standardInputs = document.querySelectorAll('input.v2-px-3.v2-appearance-none:not(#pickup0):not(#delivery0)');
+        // Grab all the weight inputs by their specific size attribute
+        const weightInputs = document.querySelectorAll('input[size="5"]');
+
+          freightData.pallets.forEach((p, i) => {
+            console.log(`Injecting Row ${i + 1}...`);
+
+            // We add a +1 offset to skip the hidden/extra input at the start of the DOM array
+            const offset = 1;
+            const idxComm = offset + (i * 5) + 0;
+            const idxQty  = offset + (i * 5) + 1;
+            const idxL    = offset + (i * 5) + 2;
+            const idxW    = offset + (i * 5) + 3;
+            const idxH    = offset + (i * 5) + 4;
+
+            // Commodity
+            if (standardInputs[idxComm]) {
+                const commString = (freightData.commodity && freightData.commodity !== "FAK") ? freightData.commodity : "General Freight";
+                setReactValue(standardInputs[idxComm], commString);
+            }
+
+            // Qty, L, W, H
+            if (standardInputs[idxQty] && p.quantity) setReactValue(standardInputs[idxQty], String(p.quantity));
+            if (standardInputs[idxL] && p.length) setReactValue(standardInputs[idxL], String(p.length));
+            if (standardInputs[idxW] && p.width) setReactValue(standardInputs[idxW], String(p.width));
+            if (standardInputs[idxH] && p.height) setReactValue(standardInputs[idxH], String(p.height));
+
+            // Combined Weight
+            if (weightInputs[i] && p.weight) {
+                const combinedWeight = p.weight * (p.quantity || 1);
+                setReactValue(weightInputs[i], String(combinedWeight));
+            }
+        });
+
+        console.log("ExFreight Injection Complete.");
+    });
+
+})();
